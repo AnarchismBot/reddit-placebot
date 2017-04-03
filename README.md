@@ -1,6 +1,6 @@
 # Reddit Place Bot
 
-This is a fork of the Argentina flag maintenance script specialized for ArchLinux with random selection added.
+This is a fork of the Argentina flag maintenance script specialized for /r/anarchism with random selection added.
 
 ## Installation
 
@@ -8,7 +8,7 @@ You need to have [NodeJS installed](https://nodejs.org)
 
 ```
 sudo pacman -Sy nodejs npm
-git clone https://github.com/wijagels/reddit-placebot.git
+git clone https://github.com/AnarchismBot/reddit-placebot.git
 cd reddit-placebot
 npm install
 ```
@@ -20,7 +20,7 @@ of your account and all your throwaways.
 
 ## Target Drawing
 
-If you run it as it is, is going to connect to the [arch-place-bitmap](https://github.com/functorcat/arch-place-bitmap) repository and try to draw
+If you run it as it is, is going to connect to the [anarchism-place-bitmap](https://github.com/AnarchismBot/anarchism-place-bitmap) repository and try to draw
 the `official_target.bmp`. If you don't want to do that you can open `config.js` and
 set `autoupdateRemoteTarget: false`. This will make it use `target.bmp` instead.
 
